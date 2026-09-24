@@ -8,7 +8,7 @@ on:
 
 jobs:
   tagged-release:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04-arm"
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
           files: |
             bazel-steward.jar
   maven-release:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04-arm"
     if: github.ref_type == 'tag'
     steps:
       - uses: actions/checkout@v4
@@ -52,14 +52,14 @@ jobs:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         name: "Release to maven central"
   maven-smoke-test:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04-arm"
     needs: maven-release
     steps:
       - uses: actions/checkout@v4
       - run: ./tools/publish/smoke-test.sh "${GITHUB_REF#refs/*/v}" 600
         name: "Verify artifact on Maven Central"
   prefix-version-tag:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04-arm"
     if: github.ref_type == 'tag' && !contains(github.ref, '-')
     needs: tagged-release
     steps:

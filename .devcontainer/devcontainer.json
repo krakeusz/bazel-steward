@@ -1,0 +1,20 @@
+{
+  "name": "bazel-steward-ci-arm64",
+  "build": {
+    "dockerfile": "../tools/ci-environment/Dockerfile",
+    "context": ".."
+  },
+  "runArgs": [
+    "--platform=linux/arm64"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/bazel-steward,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/bazel-steward",
+  "mounts": [
+    "source=bazel-steward-ci-cache,target=/var/cache/ci,type=volume"
+  ],
+  "containerEnv": {
+    "BAZEL_CACHE_ROOT": "/var/cache/ci",
+    "BAZEL_REMOTE_UPLOAD_LOCAL_RESULTS": "false",
+    "PRE_COMMIT_HOME": "/var/cache/ci/pre-commit"
+  }
+}

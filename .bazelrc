@@ -1,5 +1,7 @@
 common --enable_bzlmod
-common --lockfile_mode=update
+common --lockfile_mode=error
+common --repository_cache=/var/cache/ci/bazel/repository
+try-import %workspace%/.bazelrc.local
 
 # Preserve Bazel 6 glob semantics: some `library()` macro call-sites in this
 # repo rely on empty globs (e.g. packages that only have subpackages).
@@ -13,4 +15,4 @@ build --tool_java_runtime_version=remotejdk_17
 test --test_output=errors
 
 # CI profile: enables a disk cache for compiled outputs across runs.
-build:ci --disk_cache=/tmp/bazel-disk-cache
+build:ci --disk_cache=/var/cache/ci/bazel/disk
