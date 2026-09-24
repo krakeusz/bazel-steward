@@ -119,10 +119,8 @@ jobs:
       - name: Run pre-commit
         run: |
           docker run --rm \
-            --group-add "$(stat -c '%g' /var/run/docker.sock)" \
             --volume "$GITHUB_WORKSPACE:/workspace" \
             --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
-            --volume /var/run/docker.sock:/var/run/docker.sock \
             --workdir /workspace \
             bazel-steward-ci \
             pre-commit run --all-files

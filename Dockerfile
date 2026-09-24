@@ -9,12 +9,12 @@ RUN apt-get update \
       build-essential \
       ca-certificates \
       curl \
-      docker.io \
       git \
       gnupg \
       openjdk-17-jdk-headless \
       python3 \
       python3-pip \
+      shellcheck \
  && python3 -m pip install --break-system-packages "pre-commit==${PRE_COMMIT_VERSION}" \
  && curl -fsSLo /opt/bazelisk \
       "https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-arm64" \

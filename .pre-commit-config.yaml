@@ -15,10 +15,13 @@ repos:
     hooks:
       - id: buildifier
 
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.11.0
+  - repo: local
     hooks:
       - id: shellcheck
+        name: ShellCheck
+        entry: shellcheck
+        language: system
+        types: [shell]
 
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
     rev: v2.16.0
