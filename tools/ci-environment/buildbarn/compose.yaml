@@ -1,0 +1,28 @@
+services:
+  volume-init:
+    image: alpine@sha256:45e09956dc667c5eff3583c9d94830261fb1ca0be10a0a7db36266edf5de9e1d
+    command:
+      - sh
+      - -ec
+      - mkdir -m 0700 -p /storage-cas/persistent_state /storage-ac/persistent_state
+    volumes:
+      - buildbarn-cas:/storage-cas
+      - buildbarn-ac:/storage-ac
+
+  storage:
+    image: ghcr.io/buildbarn/bb-storage@sha256:a62b023e4b4376fd2dc613672424c2ed77a250ce259b402e6f560f4b37fa2bd3
+    command: ["/config/storage.jsonnet"]
+    depends_on:
+      volume-init:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8980:8980"
+      - "127.0.0.1:9980:9980"
+    volumes:
+      - ./storage.jsonnet:/config/storage.jsonnet:ro
+      - buildbarn-cas:/storage-cas
+      - buildbarn-ac:/storage-ac
+
+volumes:
+  buildbarn-cas:
+  buildbarn-ac:

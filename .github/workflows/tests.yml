@@ -11,36 +11,52 @@ permissions:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     name: unit-tests
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: 17
-      - name: Cache Bazel repository cache
+      - name: Cache CI environment
         uses: actions/cache@v4
         with:
-          path: ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json') }}
+          path: ${{ runner.temp }}/ci-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
-            ${{ runner.os }}-bazel-
-      - name: Cache Bazel disk cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/bazel-disk-cache
-          key: ${{ runner.os }}-bazel-disk-unit-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-disk-unit-
+            ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-
+      - name: Build CI environment
+        run: |
+          mkdir -p "${RUNNER_TEMP}/ci-cache"
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
+      - name: Configure CI remote cache
+        env:
+          BUILDBARN_REMOTE_CACHE: ${{ vars.BUILDBARN_REMOTE_CACHE }}
+          BUILDBARN_REMOTE_INSTANCE_NAME: ${{ vars.BUILDBARN_REMOTE_INSTANCE_NAME }}
+          BUILDBARN_CI_TOKEN: ${{ secrets.BUILDBARN_CI_TOKEN }}
+        run: |
+          if [[ -n "${BUILDBARN_REMOTE_CACHE}" && -n "${BUILDBARN_CI_TOKEN}" ]]; then
+            printf '%s\n' \
+              "build:ci --remote_cache=${BUILDBARN_REMOTE_CACHE}" \
+              "build:ci --remote_instance_name=${BUILDBARN_REMOTE_INSTANCE_NAME:-bazel-steward}" \
+              "build:ci --remote_header=authorization=Bearer ${BUILDBARN_CI_TOKEN}" \
+              "build:ci --remote_upload_local_results=true" \
+              > .bazelrc.local
+          fi
       - name: Run tests
-        run: bazel test --keep_going --test_tag_filters=unit --config=ci -- //...
+        run: |
+          docker run --rm \
+            --env GITHUB_TOKEN \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
+            --workdir /workspace \
+            bazel-steward-ci \
+            bazel test --keep_going --test_tag_filters=unit --config=ci -- //...
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Remove CI remote-cache credential
+        if: always()
+        run: rm -f .bazelrc.local
 
   integration-shard-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
@@ -52,27 +68,26 @@ jobs:
     name: ${{ matrix.name }}-tests
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: 17
-      - name: Cache Bazel repository cache
+      - name: Cache CI environment
         uses: actions/cache@v4
         with:
-          path: ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json') }}
+          path: ${{ runner.temp }}/ci-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
-            ${{ runner.os }}-bazel-
-      - name: Cache Bazel disk cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/bazel-disk-cache
-          key: ${{ runner.os }}-bazel-disk-${{ matrix.name }}-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-disk-${{ matrix.name }}-
+            ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-
+      - name: Build CI environment
+        run: |
+          mkdir -p "${RUNNER_TEMP}/ci-cache"
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - name: Run integration tests
-        run: bazel test --keep_going --test_tag_filters=integration --config=ci -- ${{ matrix.target }}
+        run: |
+          docker run --rm \
+            --env GITHUB_TOKEN \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
+            --workdir /workspace \
+            bazel-steward-ci \
+            bazel test --keep_going --test_tag_filters=integration --config=ci -- ${{ matrix.target }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -86,31 +101,34 @@ jobs:
         run: echo "All integration test jobs passed."
 
   static-analysis:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     name: static-analysis
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17 (for pretty-format-kotlin / ktlint)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: 17
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Cache pre-commit (incl. ktlint jar)
+      - name: Cache CI environment
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-      - uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: --all-files
+          path: ${{ runner.temp }}/ci-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-
+      - name: Build CI environment
+        run: |
+          mkdir -p "${RUNNER_TEMP}/ci-cache"
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
+      - name: Run pre-commit
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
+            --workdir /workspace \
+            bazel-steward-ci \
+            pre-commit run --all-files
 
   # Runs steward against the bazel-steward repo itself (real MODULE.bazel,
   # maven_install.json, full git history) to catch regressions on real-world input.
   test-smoke-steward-on-its-repo:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
         with:
@@ -129,7 +147,7 @@ jobs:
   # Runs steward from a separate action-src checkout against a minimal consumer
   # fixture, verifying the cross-repo consumption pattern (issue #459).
   test-smoke-steward-on-external-repo:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
       pull-requests: read
@@ -152,7 +170,7 @@ jobs:
           DOCKER_CACHE_TO: type=gha,mode=max,scope=docker-steward
 
   smoke-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     name: smoke-tests
     needs:
       - test-smoke-steward-on-its-repo

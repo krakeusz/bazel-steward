@@ -6,5 +6,7 @@ bazel-bin
 bazel-bazel-steward
 bazel-out
 bazel-testlogs
+.bazelrc.local
+.ci-cache/
 .DS_Store
 _site/

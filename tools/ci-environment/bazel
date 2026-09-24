@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly real_bazel="/opt/bazel/bin/bazelisk"
+
+if [[ "$(uname -s)" != "Linux" || "$(uname -m)" != "aarch64" ]]; then
+  cat >&2 <<'EOF'
+error: this `bazel` wrapper only runs in the Linux arm64 CI environment.
+Use the devcontainer, or invoke /opt/bazel/bin/bazelisk explicitly to bypass it.
+EOF
+  exit 1
+fi
+
+exec "${real_bazel}" "$@"
