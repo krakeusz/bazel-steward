@@ -9,6 +9,7 @@ RUN apt-get update \
       ca-certificates \
       curl \
       git \
+      gnupg \
       openjdk-17-jdk-headless \
       python3 \
       python3-pip \

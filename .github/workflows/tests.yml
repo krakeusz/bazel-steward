@@ -23,7 +23,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-ci-environment-
       - name: Build CI environment
-        run: docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+        run: |
+          mkdir -p .ci-cache
+          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
       - name: Run tests
         run: |
           docker run --rm \
@@ -62,7 +64,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-ci-environment-
       - name: Build CI environment
-        run: docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+        run: |
+          mkdir -p .ci-cache
+          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
       - name: Run integration tests
         run: |
           docker run --rm \
@@ -98,7 +102,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-ci-environment-
       - name: Build CI environment
-        run: docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+        run: |
+          mkdir -p .ci-cache
+          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
       - name: Run pre-commit
         run: |
           docker run --rm \
