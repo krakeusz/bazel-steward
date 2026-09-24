@@ -18,13 +18,13 @@ jobs:
       - name: Cache CI environment
         uses: actions/cache@v4
         with:
-          path: .ci-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
+          path: ${{ runner.temp }}/ci-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-ci-environment-
+            ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-
       - name: Build CI environment
         run: |
-          mkdir -p .ci-cache
+          mkdir -p "${RUNNER_TEMP}/ci-cache"
           docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - name: Configure CI remote cache
         env:
@@ -46,7 +46,7 @@ jobs:
             --user "$(id -u):$(id -g)" \
             --env GITHUB_TOKEN \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$GITHUB_WORKSPACE/.ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
             --workdir /workspace \
             bazel-steward-ci \
             bazel test --keep_going --test_tag_filters=unit --config=ci -- //...
@@ -72,13 +72,13 @@ jobs:
       - name: Cache CI environment
         uses: actions/cache@v4
         with:
-          path: .ci-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
+          path: ${{ runner.temp }}/ci-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-ci-environment-
+            ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-
       - name: Build CI environment
         run: |
-          mkdir -p .ci-cache
+          mkdir -p "${RUNNER_TEMP}/ci-cache"
           docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - name: Run integration tests
         run: |
@@ -86,7 +86,7 @@ jobs:
             --user "$(id -u):$(id -g)" \
             --env GITHUB_TOKEN \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$GITHUB_WORKSPACE/.ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
             --workdir /workspace \
             bazel-steward-ci \
             bazel test --keep_going --test_tag_filters=integration --config=ci -- ${{ matrix.target }}
@@ -110,20 +110,20 @@ jobs:
       - name: Cache CI environment
         uses: actions/cache@v4
         with:
-          path: .ci-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
+          path: ${{ runner.temp }}/ci-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-ci-environment-
+            ${{ runner.os }}-${{ runner.arch }}-ci-environment-v2-
       - name: Build CI environment
         run: |
-          mkdir -p .ci-cache
+          mkdir -p "${RUNNER_TEMP}/ci-cache"
           docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - name: Run pre-commit
         run: |
           docker run --rm \
             --user "$(id -u):$(id -g)" \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$GITHUB_WORKSPACE/.ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
             --workdir /workspace \
             bazel-steward-ci \
             pre-commit run --all-files
