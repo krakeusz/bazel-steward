@@ -7,7 +7,7 @@ docker build --platform linux/arm64 -t bazel-steward-ci \
   --target ci .
 docker run --rm -it \
   -v "$PWD:/workspace" \
-  -v bazel-steward-ci-cache:/var/cache/ci \
+  -v bazel-steward-ci-cache:/home/runner/.cache \
   -w /workspace \
   bazel-steward-ci bash
 ```

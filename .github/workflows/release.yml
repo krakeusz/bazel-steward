@@ -18,9 +18,8 @@ jobs:
           docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
             --workdir /workspace \
             bazel-steward-ci \
             bazel build --config=ci //app:app_deploy.jar
@@ -52,13 +51,12 @@ jobs:
           passphrase: ${{ secrets.PGP_PASSPHRASE }}
       - run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
             --env SONATYPE_USERNAME \
             --env SONATYPE_PASSWORD \
             --env PGP_PASSPHRASE \
             --env GNUPGHOME=/home/runner/.gnupg \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
             --volume "$HOME/.gnupg:/home/runner/.gnupg" \
             --workdir /workspace \
             bazel-steward-ci \

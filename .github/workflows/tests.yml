@@ -43,10 +43,9 @@ jobs:
       - name: Run tests
         run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
             --env GITHUB_TOKEN \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
             --workdir /workspace \
             bazel-steward-ci \
             bazel test --keep_going --test_tag_filters=unit --config=ci -- //...
@@ -83,10 +82,9 @@ jobs:
       - name: Run integration tests
         run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
             --env GITHUB_TOKEN \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
             --workdir /workspace \
             bazel-steward-ci \
             bazel test --keep_going --test_tag_filters=integration --config=ci -- ${{ matrix.target }}
@@ -121,9 +119,10 @@ jobs:
       - name: Run pre-commit
         run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
+            --group-add "$(stat -c '%g' /var/run/docker.sock)" \
             --volume "$GITHUB_WORKSPACE:/workspace" \
-            --volume "$RUNNER_TEMP/ci-cache:/var/cache/ci" \
+            --volume "$RUNNER_TEMP/ci-cache:/home/runner/.cache" \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
             --workdir /workspace \
             bazel-steward-ci \
             pre-commit run --all-files

@@ -10,10 +10,11 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/bazel-steward,type=bind,consistency=cached",
   "workspaceFolder": "/workspaces/bazel-steward",
+  "containerUser": "runner",
   "mounts": [
-    "source=bazel-steward-ci-cache,target=/var/cache/ci,type=volume"
+    "source=bazel-steward-ci-cache,target=/home/runner/.cache,type=volume"
   ],
   "containerEnv": {
-    "PRE_COMMIT_HOME": "/var/cache/ci/pre-commit"
+    "PRE_COMMIT_HOME": "/home/runner/.cache/pre-commit"
   }
 }
