@@ -1,5 +1,6 @@
 common --enable_bzlmod
 common --lockfile_mode=error
+startup --output_user_root=/var/cache/ci/bazel/output-user-root
 common --repository_cache=/var/cache/ci/bazel/repository
 try-import %workspace%/.bazelrc.local
 

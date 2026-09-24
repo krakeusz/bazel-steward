@@ -19,21 +19,31 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ci-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'tools/ci-environment/Dockerfile') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-ci-environment-
       - name: Build CI environment
         run: |
           mkdir -p .ci-cache
-          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
+      - name: Configure CI remote cache
+        env:
+          BUILDBARN_REMOTE_CACHE: ${{ vars.BUILDBARN_REMOTE_CACHE }}
+          BUILDBARN_REMOTE_INSTANCE_NAME: ${{ vars.BUILDBARN_REMOTE_INSTANCE_NAME }}
+          BUILDBARN_CI_TOKEN: ${{ secrets.BUILDBARN_CI_TOKEN }}
+        run: |
+          if [[ -n "${BUILDBARN_REMOTE_CACHE}" && -n "${BUILDBARN_CI_TOKEN}" ]]; then
+            printf '%s\n' \
+              "build:ci --remote_cache=${BUILDBARN_REMOTE_CACHE}" \
+              "build:ci --remote_instance_name=${BUILDBARN_REMOTE_INSTANCE_NAME:-bazel-steward}" \
+              "build:ci --remote_header=authorization=Bearer ${BUILDBARN_CI_TOKEN}" \
+              "build:ci --remote_upload_local_results=true" \
+              > .bazelrc.local
+          fi
       - name: Run tests
         run: |
           docker run --rm \
             --user "$(id -u):$(id -g)" \
-            --env BAZEL_REMOTE_CACHE="${{ vars.BUILDBARN_REMOTE_CACHE }}" \
-            --env BAZEL_REMOTE_INSTANCE_NAME="${{ vars.BUILDBARN_REMOTE_INSTANCE_NAME || 'bazel-steward' }}" \
-            --env BAZEL_REMOTE_TOKEN="${{ secrets.BUILDBARN_CI_TOKEN }}" \
-            --env BAZEL_REMOTE_UPLOAD_LOCAL_RESULTS=true \
             --env GITHUB_TOKEN \
             --volume "$GITHUB_WORKSPACE:/workspace" \
             --volume "$GITHUB_WORKSPACE/.ci-cache:/var/cache/ci" \
@@ -42,6 +52,9 @@ jobs:
             bazel test --keep_going --test_tag_filters=unit --config=ci -- //...
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Remove CI remote-cache credential
+        if: always()
+        run: rm -f .bazelrc.local
 
   integration-shard-tests:
     runs-on: ubuntu-24.04-arm
@@ -60,13 +73,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ci-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'tools/ci-environment/Dockerfile') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-ci-environment-
       - name: Build CI environment
         run: |
           mkdir -p .ci-cache
-          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - name: Run integration tests
         run: |
           docker run --rm \
@@ -98,13 +111,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ci-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'tools/ci-environment/Dockerfile') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ci-environment-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', '.pre-commit-config.yaml', 'Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-ci-environment-
       - name: Build CI environment
         run: |
           mkdir -p .ci-cache
-          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - name: Run pre-commit
         run: |
           docker run --rm \

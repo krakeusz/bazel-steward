@@ -15,7 +15,7 @@ jobs:
       - name: Build CI environment
         run: |
           mkdir -p .ci-cache
-          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - run: |
           docker run --rm \
             --user "$(id -u):$(id -g)" \
@@ -44,7 +44,7 @@ jobs:
       - name: Build CI environment
         run: |
           mkdir -p .ci-cache
-          docker build --platform linux/arm64 --tag bazel-steward-ci --file tools/ci-environment/Dockerfile .
+          docker build --platform linux/arm64 --target ci --tag bazel-steward-ci .
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v5
         with:

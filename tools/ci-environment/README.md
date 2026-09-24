@@ -4,7 +4,7 @@ Build the image and enter the repository with the same tools that CI uses:
 
 ```sh
 docker build --platform linux/arm64 -t bazel-steward-ci \
-  -f tools/ci-environment/Dockerfile .
+  --target ci .
 docker run --rm -it \
   -v "$PWD:/workspace" \
   -v bazel-steward-ci-cache:/var/cache/ci \
@@ -30,12 +30,14 @@ For an isolated local cache experiment, start the storage daemon:
 docker compose -f tools/ci-environment/buildbarn/compose.yaml up -d
 ```
 
-Then configure the devcontainer or `docker run` invocation with:
+Then create the ignored `.bazelrc.local` file:
 
 ```sh
-BAZEL_REMOTE_CACHE=grpc://host.docker.internal:8980
-BAZEL_REMOTE_INSTANCE_NAME=bazel-steward
-BAZEL_REMOTE_UPLOAD_LOCAL_RESULTS=false
+cat > .bazelrc.local <<'EOF'
+build:ci --remote_cache=grpc://host.docker.internal:8980
+build:ci --remote_instance_name=bazel-steward
+build:ci --remote_upload_local_results=false
+EOF
 ```
 
 The Compose deployment binds its ports to loopback and deliberately accepts all

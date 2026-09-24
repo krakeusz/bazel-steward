@@ -2,7 +2,6 @@
 set -euo pipefail
 
 readonly real_bazel="/opt/bazel/bin/bazelisk"
-readonly cache_root="${BAZEL_CACHE_ROOT:-/var/cache/ci}"
 
 if [[ "$(uname -s)" != "Linux" || "$(uname -m)" != "aarch64" ]]; then
   cat >&2 <<'EOF'
@@ -12,45 +11,4 @@ EOF
   exit 1
 fi
 
-mkdir -p \
-  "${cache_root}/bazel/output-user-root" \
-  "${cache_root}/bazelisk" \
-  "${cache_root}/pre-commit"
-
-arguments=("$@")
-command_index=-1
-for index in "${!arguments[@]}"; do
-  case "${arguments[$index]}" in
-    analyze-profile|aquery|build|canonicalize-flags|clean|coverage|cquery|dump|fetch|help|info|license|mod|mobile-install|print_action|query|run|shutdown|sync|test|version)
-      command_index="${index}"
-      break
-      ;;
-  esac
-done
-
-if [[ "${command_index}" -lt 0 ]]; then
-  exec "${real_bazel}" --output_user_root="${cache_root}/bazel/output-user-root" "${arguments[@]}"
-fi
-
-before_command=("${arguments[@]:0:command_index}")
-command="${arguments[$command_index]}"
-after_command=("${arguments[@]:command_index + 1}")
-remote_flags=()
-
-if [[ -n "${BAZEL_REMOTE_CACHE:-}" ]]; then
-  remote_flags+=(
-    "--remote_cache=${BAZEL_REMOTE_CACHE}"
-    "--remote_instance_name=${BAZEL_REMOTE_INSTANCE_NAME:-bazel-steward}"
-    "--remote_upload_local_results=${BAZEL_REMOTE_UPLOAD_LOCAL_RESULTS:-false}"
-  )
-  if [[ -n "${BAZEL_REMOTE_TOKEN:-}" ]]; then
-    remote_flags+=("--remote_header=authorization=Bearer ${BAZEL_REMOTE_TOKEN}")
-  fi
-fi
-
-exec "${real_bazel}" \
-  --output_user_root="${cache_root}/bazel/output-user-root" \
-  "${before_command[@]}" \
-  "${command}" \
-  "${remote_flags[@]}" \
-  "${after_command[@]}"
+exec "${real_bazel}" "$@"
