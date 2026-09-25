@@ -7,7 +7,7 @@
   },
   "runArgs": [
     "--platform=linux/arm64",
-    "--network=machine-ci-bazel-steward-buildbarn_default"
+    "--network=bazel-steward-unified-environment-example_default"
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/bazel-steward,type=bind,consistency=cached",
   "workspaceFolder": "/workspaces/bazel-steward",
