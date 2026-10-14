@@ -21,6 +21,8 @@
     "source=${localEnv:HOME}/.config/bazel-steward,target=/home/runner/.config/bazel-steward,type=bind,readonly"
   ],
   "containerEnv": {
+    // The image has no locale set; zsh themes with non-ASCII prompts fail under POSIX.
+    "LANG": "C.UTF-8",
     "PRE_COMMIT_HOME": "/home/runner/.cache/pre-commit",
     "BAZELISK_HOME": "/home/runner/.cache/bazelisk"
   },
