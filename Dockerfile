@@ -47,6 +47,9 @@ RUN apt-get update \
       procps \
       ripgrep \
       sudo \
+      vim \
+      zsh \
+ && install -d -o runner -g runner -m 0755 /home/runner/.config \
  && echo 'runner ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/runner \
  && chmod 0440 /etc/sudoers.d/runner \
  && rm -rf /var/lib/apt/lists/*

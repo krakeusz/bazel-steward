@@ -20,6 +20,9 @@ fail() {
 command -v docker >/dev/null || fail "docker is required to seed the devcontainer volume"
 docker info >/dev/null 2>&1 || fail "Docker is not running"
 
+# Bind-mounted for the developer's startup script; the mount fails if it is missing.
+mkdir -p "${HOME}/.config/bazel-steward"
+
 docker volume create "${volume}" >/dev/null
 docker volume create "${cache_volume}" >/dev/null
 
@@ -62,3 +65,11 @@ docker run --rm \
   -v "${cache_volume}:/cache" \
   "${helper_image}" \
   sh -c "chown -R ${uid}:${gid} /workspace && chown ${uid}:${gid} /cache"
+
+# Rebuilds read devcontainer.json and the Dockerfile from the folder the editor
+# opened, so edits made in the container only count when that folder is the volume.
+readonly orbstack_volume_dir="${HOME}/OrbStack/docker/volumes/${volume}"
+if [[ -d "${orbstack_volume_dir}" && "${workspace}" != "${orbstack_volume_dir}" ]]; then
+  printf 'note: open %s on the Mac instead of %s; that folder is the volume itself.\n' \
+    "${orbstack_volume_dir}" "${workspace}"
+fi

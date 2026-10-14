@@ -17,6 +17,8 @@ fi
 # Download the pinned Bazel now so the first edit does not wait on Bazelisk.
 bazel version
 
+bash .devcontainer/personalize.sh
+
 printf '%s\n' \
   "Workspace /workspaces/bazel-steward is on a Linux volume (not a macOS bind mount)." \
   "Check the project with: bazel test --test_tag_filters=unit //..."

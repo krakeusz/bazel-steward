@@ -1,3 +1,23 @@
+## Dev container
+
+The source lives on the Docker volume `bazel-steward-dev-src`, not on the macOS checkout (see [`.devcontainer/`](.devcontainer/)). The first time, open your macOS checkout in Cursor or VS Code and choose "Reopen in Container"; that copies the checkout into the volume.
+
+From then on, open the volume itself from the Mac, `~/OrbStack/docker/volumes/bazel-steward-dev-src` with OrbStack, and reopen it in the container. The editor reads `.devcontainer/` and `Dockerfile` from the folder opened on the Mac, so a rebuild only picks up changes made inside the container when that folder is the volume. Without OrbStack, get such changes to the macOS checkout through git before rebuilding.
+
+Your shell environment comes from `~/.config/bazel-steward/devcontainer.sh` on the host. The directory is mounted read-only into the container, and the script runs with bash once the container is created. Without it, the [default profile](.devcontainer/profiles/default.sh) makes zsh the login shell with a macOS-like `~/.zshrc`. Profiles in [`.devcontainer/profiles/`](.devcontainer/profiles/) can be reused from your script through `$BAZEL_STEWARD_PROFILES`, for example:
+
+```sh
+# ~/.config/bazel-steward/devcontainer.sh
+source "${BAZEL_STEWARD_PROFILES}/default.sh"
+sudo apt-get install -y htop
+```
+
+[`linux-confs.sh`](.devcontainer/profiles/linux-confs.sh) is a fuller example that applies a personal Ansible dotfiles repo. Your host ssh-agent is forwarded by the editor; private keys are never copied in. After editing the script, re-run it without rebuilding:
+
+```sh
+bash .devcontainer/personalize.sh
+```
+
 ## Pre-commit hooks
 
 We use [pre-commit](https://pre-commit.com/) for local checks before commits. Which hooks run, and their versions, are defined in [`.pre-commit-config.yaml`](.pre-commit-config.yaml).

@@ -16,7 +16,9 @@
   "init": true,
   "shutdownAction": "none",
   "mounts": [
-    "source=bazel-steward-dev-cache,target=/home/runner/.cache,type=volume"
+    "source=bazel-steward-dev-cache,target=/home/runner/.cache,type=volume",
+    // Per-developer startup script; see .devcontainer/personalize.sh.
+    "source=${localEnv:HOME}/.config/bazel-steward,target=/home/runner/.config/bazel-steward,type=bind,readonly"
   ],
   "containerEnv": {
     "PRE_COMMIT_HOME": "/home/runner/.cache/pre-commit",
@@ -27,6 +29,12 @@
   "customizations": {
     "vscode": {
       "settings": {
+        "terminal.integrated.profiles.linux": {
+          "login shell": {
+            "path": "/workspaces/bazel-steward/.devcontainer/login-shell.sh"
+          }
+        },
+        "terminal.integrated.defaultProfile.linux": "login shell",
         "files.watcherExclude": {
           "**/bazel-bin/**": true,
           "**/bazel-out/**": true,
