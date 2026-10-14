@@ -1,5 +1,7 @@
 ## Dev container
 
+It needs an Apple silicon Mac and a Docker engine; OrbStack is recommended. Prerequisites, drawbacks and the state of other runtimes are in [`.devcontainer/README.md`](.devcontainer/README.md).
+
 The source lives on the Docker volume `bazel-steward-dev-src`, not on the macOS checkout (see [`.devcontainer/`](.devcontainer/)). The first time, open your macOS checkout in Cursor or VS Code and choose "Reopen in Container"; that copies the checkout into the volume.
 
 From then on, open the volume itself from the Mac, `~/OrbStack/docker/volumes/bazel-steward-dev-src` with OrbStack, and reopen it in the container. The editor reads `.devcontainer/` and `Dockerfile` from the folder opened on the Mac, so a rebuild only picks up changes made inside the container when that folder is the volume. Without OrbStack, get such changes to the macOS checkout through git before rebuilding.
