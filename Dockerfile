@@ -35,6 +35,25 @@ ENV HOME=/home/runner \
 
 USER runner
 
+# Editor and agent image. Same toolchain as CI, plus the shell tools a
+# developer or agent needs inside the container. Source stays on a volume,
+# not in this image.
+FROM ci AS dev
+USER root
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      less \
+      openssh-client \
+      procps \
+      ripgrep \
+      sudo \
+ && echo 'runner ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/runner \
+ && chmod 0440 /etc/sudoers.d/runner \
+ && rm -rf /var/lib/apt/lists/*
+COPY .devcontainer/post-create.sh /usr/local/bin/devcontainer-post-create
+RUN chmod 0755 /usr/local/bin/devcontainer-post-create
+USER runner
+
 FROM ci AS builder
 USER root
 COPY . .

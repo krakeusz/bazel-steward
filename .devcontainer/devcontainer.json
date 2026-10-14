@@ -1,21 +1,51 @@
 {
-  "name": "bazel-steward-ci-arm64",
+  "name": "bazel-steward (linux/arm64)",
   "build": {
     "dockerfile": "../Dockerfile",
     "context": "..",
-    "target": "ci"
+    "target": "dev"
   },
-  "runArgs": [
-    "--platform=linux/arm64",
-    "--network=bazel-steward-unified-environment-example_default"
-  ],
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/bazel-steward,type=bind,consistency=cached",
+  "runArgs": ["--platform=linux/arm64"],
+  // Named volumes live on the Linux VM disk. Do not bind-mount the macOS checkout:
+  // that path was several times slower for incremental Bazel runs.
+  "workspaceMount": "source=bazel-steward-dev-src,target=/workspaces/bazel-steward,type=volume",
   "workspaceFolder": "/workspaces/bazel-steward",
   "containerUser": "runner",
+  "remoteUser": "runner",
+  "updateRemoteUserUID": false,
+  "init": true,
+  "shutdownAction": "none",
   "mounts": [
-    "source=bazel-steward-ci-cache,target=/home/runner/.cache,type=volume"
+    "source=bazel-steward-dev-cache,target=/home/runner/.cache,type=volume"
   ],
   "containerEnv": {
-    "PRE_COMMIT_HOME": "/home/runner/.cache/pre-commit"
+    "PRE_COMMIT_HOME": "/home/runner/.cache/pre-commit",
+    "BAZELISK_HOME": "/home/runner/.cache/bazelisk"
+  },
+  "initializeCommand": "bash .devcontainer/seed-volume.sh",
+  "postCreateCommand": "/usr/local/bin/devcontainer-post-create",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "files.watcherExclude": {
+          "**/bazel-bin/**": true,
+          "**/bazel-out/**": true,
+          "**/bazel-testlogs/**": true,
+          "**/bazel-bazel-steward/**": true
+        },
+        "search.exclude": {
+          "**/bazel-bin": true,
+          "**/bazel-out": true,
+          "**/bazel-testlogs": true,
+          "**/bazel-bazel-steward": true
+        },
+        "files.exclude": {
+          "bazel-bin": true,
+          "bazel-out": true,
+          "bazel-testlogs": true,
+          "bazel-bazel-steward": true
+        }
+      }
+    }
   }
 }
