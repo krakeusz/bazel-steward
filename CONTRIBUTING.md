@@ -1,6 +1,6 @@
 ## Dev container
 
-It needs an Apple silicon Mac and a Docker engine; OrbStack is recommended. Prerequisites, drawbacks and the state of other runtimes are in [`.devcontainer/README.md`](.devcontainer/README.md).
+It needs an Apple silicon Mac and a Docker engine; OrbStack is recommended. Prerequisites, drawbacks, workarounds and the state of other runtimes are in machine-ci's [`Materials/tasks/environment/devcontainer.md`](https://github.com/VirtusLab/machine-ci/blob/main/Materials/tasks/environment/devcontainer.md).
 
 The source lives on the Docker volume `bazel-steward-dev-src`, not on the macOS checkout (see [`.devcontainer/`](.devcontainer/)). The first time, open your macOS checkout in Cursor or VS Code and choose "Reopen in Container"; that copies the checkout into the volume.
 
@@ -14,7 +14,7 @@ source "${BAZEL_STEWARD_PROFILES}/default.sh"
 sudo apt-get install -y htop
 ```
 
-[`linux-confs.sh`](.devcontainer/profiles/linux-confs.sh) is a fuller example that applies a personal Ansible dotfiles repo. Your host ssh-agent is forwarded by the editor; private keys are never copied in. After editing the script, re-run it without rebuilding:
+Your host ssh-agent is forwarded by the editor; private keys are never copied in. After editing the script, re-run it without rebuilding:
 
 ```sh
 bash .devcontainer/personalize.sh
